@@ -148,3 +148,17 @@ class UpdateProfileView(APIView):
                 {'error': str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        
+
+
+class PredictionApiView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def __init__(self):
+        self.user_service = UserService()
+
+
+    def post(self, request):
+        prediction_result = self.user_service.predict_disease(request)
+        return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)

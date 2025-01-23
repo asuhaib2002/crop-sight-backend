@@ -1,7 +1,9 @@
+import os
 from django.core.cache import cache
 import re
 from typing import Tuple
 from django.conf import settings
+from requests import Request
 from .dtos.response.response_dataclass import UserProfileData, OTPData, LoginResponseData
 from .dtos.request.request_dataclass import UserUpdateData
 from .exceptions import InvalidPhoneNumberError, OTPValidationError, UserNotFoundError
@@ -12,6 +14,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from .exceptions import EmailAlreadyExistsError, InvalidDateFormatError
 from rest_framework.authtoken.models import Token
+from .prediction_service import PredictionService
+from django.conf import settings
 
 class UserService:
     @staticmethod
@@ -123,3 +127,11 @@ class UserService:
             
         except User.DoesNotExist:
             raise UserNotFoundError("User not found")
+
+
+    def predict_disease(self, request: Request):
+        image = request.FILES.get('image')
+        model_path = os.path.join(settings.BASE_DIR, "comb_cnn_model_state_dict.pth")
+        service = PredictionService(model_path=model_path, class_names=['Early_Blight', 'Healthy', 'Late_Blight'])
+        result = service.predict(image)
+        return result
