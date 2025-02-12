@@ -76,3 +76,104 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.phone_number
+    
+
+
+
+class Categories(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    # image = models.ImageField(upload_to='categories/')
+
+    def __str__(self):
+        return self.name
+
+
+class Products(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.ForeignKey(Categories, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='products/')
+
+    def __str__(self):
+        return self.name
+    
+
+class Orders(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    ordered_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.phone_number
+    
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # product = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
+    quantity = models.IntegerField(default=0)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return self.user.phone_number
+    
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.product.price * self.quantity  # Auto-update price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.name} in {self.cart}"
+    
+
+class Address(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=10)
+    status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.user.phone_number
+    
+
+class Payment(models.Model):
+    order = models.ForeignKey(Orders, on_delete=models.CASCADE)
+    payment_mode = models.CharField(max_length=100)
+    payment_status = models.CharField(max_length=100)
+    payment_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.order.user.phone_number
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True)
+    list_of_crops = models.JSONField(null=True)
+
+    def __str__(self):
+        return self.user.phone_number
+
+
+class CropPrediction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='crop_images/')
+    predicted_crop = models.CharField(max_length=100)
+    confidence = models.DecimalField(max_digits=10, decimal_places=2)
+    predicted_at = models.DateTimeField(auto_now_add=True)
+    correct_prediction = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.user.phone_number
+    

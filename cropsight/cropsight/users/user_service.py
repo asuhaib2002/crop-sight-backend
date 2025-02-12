@@ -4,11 +4,11 @@ import re
 from typing import Tuple
 from django.conf import settings
 from requests import Request
-from .dtos.response.response_dataclass import UserProfileData, OTPData, LoginResponseData
+from .dtos.response.response_dataclass import CartItemData, HomeScreenData, ProductDetailResponse, ProductListingResponse, UserProfileData, OTPData, LoginResponseData
 from .dtos.request.request_dataclass import UserUpdateData
-from .exceptions import InvalidPhoneNumberError, OTPValidationError, UserNotFoundError
+from .exceptions import InvalidPhoneNumberError, OTPValidationError, ProductNotFoundError, UserNotFoundError
 import random
-from .models import User
+from .models import Cart, CartItem, Products, User, UserProfile
 from datetime import datetime
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -135,3 +135,95 @@ class UserService:
         service = PredictionService(model_path=model_path, class_names=['Early_Blight', 'Healthy', 'Late_Blight'])
         result = service.predict(image)
         return result
+    
+
+    def get_home_data(self, request: Request):
+        user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        crops = user_profile.list_of_crops
+        products = Products.objects.order_by('?')[:10]
+
+        return HomeScreenData.generate_response(products, crops)
+    
+
+    def get_product_listing_data(self, request: Request):
+        #apply filters based on search, and also on categories
+        search = request.GET.get('search')
+        category = request.GET.get('category')
+        
+        products = Products.objects.all()
+        if search:
+            products = products.filter(name__icontains=search)
+
+        if category:
+            products = products.filter(category__name__icontains=category)
+
+        data = ProductListingResponse.generate_response(products)
+        return data
+        
+
+    def add_to_cart(self, user, product_id):
+        cart, _= Cart.objects.get_or_create(user=user)
+        product = Products.objects.get(id=product_id)
+        cart_item, created = cart.items.get_or_create(product=product)
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
+
+        cart.total_price += product.price
+        cart.quantity += 1
+        cart.save()
+        #get all cart item
+
+        all_cart_items = cart.items.all()
+        cart_item_data = CartItemData.generate_response(all_cart_items)
+        # CartItemData.generate_response(cart_item)
+
+        return cart_item_data
+    
+    def remove_from_cart(self, user, product_id):
+        cart, _ = Cart.objects.get_or_create(user=user)
+        product = Products.objects.get(id=product_id)
+
+        try:
+            cart_item = cart.items.get(product=product)
+
+            if cart_item.quantity > 1:
+                # Decrease quantity if more than 1
+                cart_item.quantity -= 1
+                cart_item.save()
+                cart.total_price -= product.price
+                cart.quantity -= 1
+            else:
+                # Remove the item if quantity is 1 (after decrement, it would be 0)
+                cart.total_price -= product.price
+                cart.quantity -= 1
+                cart_item.delete()
+
+            cart.save()
+
+        except CartItem.DoesNotExist:
+            pass  # Item is not in cart, nothing to remove
+
+        # Return updated cart items
+        all_cart_items = cart.items.all()
+        cart_item_data = CartItemData.generate_response(all_cart_items)
+        return cart_item_data
+    
+    def get_cart(self, user):
+        cart,_ = Cart.objects.get_or_create(user=user)
+        return CartItemData.generate_response(cart.items.all())
+    
+    def clear_cart(self, user):
+        cart, _ = Cart.objects.get_or_create(user=user)
+        cart.items.all().delete()
+        cart.total_price = 0
+        cart.quantity = 0
+        cart.save()
+        return CartItemData.generate_response(cart.items.all())
+    
+
+    def get_product_detail(self, request, product_id):
+        product = Products.objects.filter(id=product_id).first()
+        if not product:
+            raise ProductNotFoundError("Product not found")
+        return ProductDetailResponse.generate_response(product)

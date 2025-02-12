@@ -162,3 +162,88 @@ class PredictionApiView(APIView):
     def post(self, request):
         prediction_result = self.user_service.predict_disease(request)
         return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)
+    
+
+class HomeApiView(APIView):
+
+    def __init__(self):
+        self.user_service = UserService()
+
+    def get(self, request):
+        home_response = self.user_service.get_home_data(request=request)
+        return CSResponse.send_response(success=True, message='Home data fetched', data=home_response, status=status.HTTP_200_OK)
+    
+
+class ProductListApiView(APIView):
+
+    def __init__(self):
+        self.user_service = UserService()
+
+    def get(self, request):
+        product_response = self.user_service.get_product_listing_data(request=request)
+        return CSResponse.send_response(success=True, message='Home data fetched', status=status.HTTP_200_OK, data=product_response)
+    
+
+
+class ProductdetailApiView(APIView):
+    
+    def __init__(self):
+        self.user_service = UserService()
+
+    def get(self, request):
+        product_id = request.GET.get('product_id')
+        product_response = self.user_service.get_product_detail(request=request, product_id=product_id)
+        return CSResponse.send_response(success=True, message='Product detail fetched', status=status.HTTP_200_OK, data=product_response)
+
+
+class AddToCartApiView(APIView):
+
+
+    def __init__(self):
+        self.user_service = UserService()
+
+    def post(self, request):
+        try:
+            product_id = request.data.get('product_id')
+            print(product_id)
+            data = self.user_service.add_to_cart(request.user, product_id)
+            return CSResponse.send_response(success=True, message='Product added to cart', status=status.HTTP_200_OK, data=data)
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class RemoveFromCartApiView(APIView):
+    
+    def __init__(self):
+        self.user_service = UserService()
+
+    def post(self, request):
+        try:
+            product_id = request.data.get('product_id')
+            data = self.user_service.remove_from_cart(request.user, product_id)
+            return CSResponse.send_response(success=True, message='Product removed from cart', status=status.HTTP_200_OK, data=data)
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+class CartApiView(APIView):
+    
+    def __init__(self):
+        self.user_service = UserService()
+
+    def get(self, request):
+        cart_response = self.user_service.get_cart(request.user)
+        return CSResponse.send_response(success=True, message='Cart data fetched', status=status.HTTP_200_OK, data=cart_response)
+    
+
+class ClearCartApiView(APIView):
+    
+    def __init__(self):
+        self.user_service = UserService()
+
+    def post(self, request):
+        try:
+            data = self.user_service.clear_cart(request.user)
+            return CSResponse.send_response(success=True, message='Cart cleared', status=status.HTTP_200_OK, data=data)
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

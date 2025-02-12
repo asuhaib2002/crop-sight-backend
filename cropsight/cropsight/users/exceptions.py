@@ -16,3 +16,6 @@ class EmailAlreadyExistsError(Exception):
 
 class InvalidDateFormatError(Exception):
     pass
+
+class ProductNotFoundError(Exception):
+    pass

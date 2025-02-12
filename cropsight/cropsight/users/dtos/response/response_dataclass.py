@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import product
 from typing import Optional
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -39,3 +40,69 @@ class PredictionResponseData:
 class LoginResponseData:
     token: str
     user: UserProfileData
+
+
+@dataclass
+class ProductData:
+    name: str
+    price: float
+    description: str
+    image: str
+    category: str
+
+    def generate_response(product):
+        return ProductData(name=product.name, price=product.price, description=product.description, image=product.image.url, category=product.category.name)
+
+
+@dataclass
+class UserCropData:
+    crop_name: str
+
+@dataclass
+class HomeScreenData:
+    products: list[ProductData]
+    user_crops: list[UserCropData]
+
+    def generate_response(products: product, user_crops):
+        print(user_crops)
+        products = [ProductData(name=product.name, price=product.price, description=product.description, image=product.image.url) for product in products]
+        user_crops = [UserCropData(crop_name=crop.crop_name) for crop in user_crops] if user_crops else []
+        return HomeScreenData(products=products, user_crops=user_crops)
+        
+
+
+@dataclass
+class ProductListingResponse:
+    products: list[ProductData]
+
+    def generate_response(products):
+        products = [ProductData.generate_response(product) for product in products]
+        return ProductListingResponse(products=products)
+    
+@dataclass
+class ProductDetailResponse:
+    id: int
+    name: str
+    price: float
+    description: str
+    image: str
+    category: str
+
+    def generate_response(product):
+        return ProductDetailResponse(id=product.id, name=product.name, price=product.price, description=product.description, image=product.image.url, category=product.category.name)
+
+
+@dataclass
+class CartItemData:
+    product: ProductData
+    quantity: int
+
+    @staticmethod
+    def generate_response(cart_items):
+        return [
+            CartItemData(
+                product=ProductData.generate_response(cart_item.product),
+                quantity=cart_item.quantity
+            )
+            for cart_item in cart_items
+        ]
