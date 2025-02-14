@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
-import matplotlib.pyplot as plt
 
 # Define the CNN model
 class CNNModel(nn.Module):
