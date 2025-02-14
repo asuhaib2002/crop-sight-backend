@@ -53,7 +53,7 @@ class LoginView(APIView):
         except InvalidPhoneNumberError as e:
             return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return CSResponse.send_response(success=False, error=str(e), statusß=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VerifyOTPView(APIView):
     authentication_classes = []
