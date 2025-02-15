@@ -10,7 +10,6 @@ class UserNotFoundError(Exception):
 class ImageProcessingError(Exception):
     pass
 
-
 class EmailAlreadyExistsError(Exception):
     pass
 
@@ -18,4 +17,7 @@ class InvalidDateFormatError(Exception):
     pass
 
 class ProductNotFoundError(Exception):
+    pass
+
+class UndefinedDiseaseError(Exception):
     pass

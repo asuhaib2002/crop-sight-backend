@@ -151,7 +151,7 @@ class UpdateProfileView(APIView):
         
 
 
-class PredictionApiView(APIView):
+class PotatoPredictionApiView(APIView):
     authentication_classes = []
     permission_classes = []
 
@@ -160,8 +160,42 @@ class PredictionApiView(APIView):
 
 
     def post(self, request):
-        prediction_result = self.user_service.predict_disease(request)
-        return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)
+        try:
+            prediction_result = self.user_service.predict_disease(request, 'potato')
+            return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_400_BAD_REQUEST)
+
+class CottonPredictionApiView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def __init__(self):
+        self.user_service = UserService()
+
+
+    def post(self, request):
+        try:
+            prediction_result = self.user_service.predict_disease(request, 'cotton')
+            return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_400_BAD_REQUEST)
+    
+class WheatPredictionApiView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def __init__(self):
+        self.user_service = UserService()
+
+
+    def post(self, request):
+        try:
+            prediction_result = self.user_service.predict_disease(request, 'wheat')
+            return CSResponse.send_response(success=True, data=prediction_result, message='Prediction successful', status=status.HTTP_200_OK)
+        except Exception as e:
+            return CSResponse.send_response(success=False, error=str(e), status=status.HTTP_400_BAD_REQUEST)
     
 
 class HomeApiView(APIView):

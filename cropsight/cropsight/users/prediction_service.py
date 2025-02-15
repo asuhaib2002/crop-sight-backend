@@ -3,41 +3,42 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
+from .exceptions import UndefinedDiseaseError
 
-# Define the CNN model
 class CNNModel(nn.Module):
     def __init__(self, n_classes):
         super(CNNModel, self).__init__()
         self.conv_layers = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
-
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1),
+            nn.Conv2d(3, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
+            nn.MaxPool2d(2),
 
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
+            nn.MaxPool2d(2),
 
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2, padding=0),
-            nn.AdaptiveAvgPool2d((1, 1))
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.Dropout2d(0.3),
+            nn.MaxPool2d(2)
         )
 
         self.fc_layers = nn.Sequential(
+            nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(64 * 1 * 1, 64),
-            nn.BatchNorm1d(64),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(64, n_classes)
+            nn.Dropout(0.5),
+            nn.Linear(256, n_classes)
         )
 
     def forward(self, x):
@@ -60,7 +61,6 @@ class PredictionService:
     def _load_model(self, model_path):
         """Load the trained model from the specified path."""
         model = CNNModel(n_classes=len(self.class_names))
-        # model.load_state_dict(torch.load(model_path, map_location=self.device, weights_only=True))
 
         model.load_state_dict(torch.load(model_path, map_location=self.device, weights_only=True))
         model.to(self.device)
@@ -86,6 +86,8 @@ class PredictionService:
 
         predicted_class = self.class_names[predicted.item()]
         confidence = confidences.item() * 100
+        if confidence < 75:
+            raise UndefinedDiseaseError("Cannot classify, please upload a clear image")
 
         return {
             "predicted_class": predicted_class,

@@ -129,10 +129,19 @@ class UserService:
             raise UserNotFoundError("User not found")
 
 
-    def predict_disease(self, request: Request):
+    def predict_disease(self, request: Request, plant: str):
         image = request.FILES.get('image')
-        model_path = os.path.join(settings.BASE_DIR, "comb_cnn_model_state_dict.pth")
-        service = PredictionService(model_path=model_path, class_names=['Early_Blight', 'Healthy', 'Late_Blight'])
+        if not image:
+            raise ValueError("Image not found")
+        if plant.lower() == 'potato':
+            model_path = os.path.join(settings.BASE_DIR, "Potato_cnn_model_state_dict.pth")
+            service = PredictionService(model_path=model_path, class_names=['Early_Blight', 'Healthy', 'Late_Blight'])
+        elif plant.lower() == 'wheat':
+            model_path = os.path.join(settings.BASE_DIR, "Wheat_cnn_model_state_dict.pth")
+            service = PredictionService(model_path=model_path, class_names=['Brown_Rust', 'Healthy', 'Yellow_Rust'])
+        elif plant.lower() == 'cotton':
+            model_path = os.path.join(settings.BASE_DIR, "Cotton_cnn_model_state_dict.pth")
+            service = PredictionService(model_path=model_path, class_names=['bacterial_blight', 'curl_virus', 'fussarium_wilt', 'healthy'])
         result = service.predict(image)
         return result
     

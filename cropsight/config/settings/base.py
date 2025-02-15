@@ -50,10 +50,10 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cs_detection',
-        'USER': 'cropsight_user',
-        'PASSWORD': 'Cropsight@2024',
-        'HOST': 'mysql',
+        'NAME': 'crop_sight',
+        'USER': 'root',
+        'PASSWORD': 'qwerty',
+        'HOST': 'localhost',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
