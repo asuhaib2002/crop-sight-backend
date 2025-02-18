@@ -50,10 +50,10 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'crop_sight',
-        'USER': 'root',
-        'PASSWORD': 'qwerty',
-        'HOST': 'localhost',
+        'NAME': 'cs_detection',
+        'USER': 'cropsight_user',
+        'PASSWORD': 'Cropsight@2024',
+        'HOST': 'mysql',
         'PORT': '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
@@ -72,9 +72,14 @@ ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1', 'https://luminosalabs.com']
 # APPS
+
 # ------------------------------------------------------------------------------
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 DJANGO_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
