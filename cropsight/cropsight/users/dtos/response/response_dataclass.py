@@ -29,11 +29,6 @@ class OTPData:
     phone_number: str
     otp: str
 
-@dataclass
-class PredictionResponseData:
-    disease_class: str
-    confidence: float
-    additional_info: Optional[dict] = None
 
 
 @dataclass
@@ -44,7 +39,7 @@ class LoginResponseData:
 
 @dataclass
 class ProductData:
-    id = int
+    id: int
     name: str
     price: float
     description: str
@@ -106,3 +101,19 @@ class CartItemData:
             )
             for cart_item in cart_items
         ]
+    
+
+@dataclass
+class PredictionResponseData:
+    disease_class: str
+    confidence: float
+    additional_info: Optional[dict] = None
+    products : list[ProductData] = None
+
+    def generate_response(disease_class, confidence, additional_info=None, products=None):
+        return PredictionResponseData(
+            disease_class=disease_class,
+            confidence=confidence,
+            additional_info=additional_info,
+            products=[ProductData.generate_response(product) for product in products] if products else None
+        )

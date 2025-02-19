@@ -4,6 +4,8 @@ import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
 from .exceptions import UndefinedDiseaseError
+from .dtos.response.response_dataclass import PredictionResponseData
+from .models import Products
 
 class CNNModel(nn.Module):
     def __init__(self, n_classes):
@@ -89,7 +91,85 @@ class PredictionService:
         if confidence < 75:
             raise UndefinedDiseaseError("Cannot classify, please upload a clear image")
 
-        return {
-            "predicted_class": predicted_class,
-            "confidence": confidence
-        }
+        products = Products.objects.filter(category__name=predicted_class).order_by('?')[:10]
+        additional_info_message = ''
+        # 'Late_Blight'['Brown_Rust', 'Healthy', 'Yellow_Rust']bacterial_blight', 'curl_virus', 'fussarium_wilt', 'healthy'
+        if predicted_class == "healthy" or predicted_class == "Healthy":
+            additional_info_message = (
+        "No disease detected. Your plant appears to be in good health! "
+        "To maintain plant health, ensure proper watering, fertilization, and pest control. "
+        "Regular monitoring will help catch any early signs of disease."
+        )
+
+        elif predicted_class == "bacterial_blight":
+            additional_info_message = (
+                "Bacterial blight is a serious disease caused by Xanthomonas bacteria. It leads to yellowing, wilting, and dark spots on leaves, eventually causing defoliation. "
+                "To manage this disease: \n"
+                "- Remove and destroy infected plant parts. \n"
+                "- Avoid overhead watering, as moisture spreads bacteria. \n"
+                "- Use copper-based fungicides to control its spread. \n"
+                "- Ensure good air circulation around plants to reduce humidity."
+            )
+
+        elif predicted_class == "curl_virus":
+            additional_info_message = (
+                "Curl virus, commonly known as Leaf Curl Virus, is a viral disease that causes leaves to curl, twist, and develop a leathery texture. It spreads through whiteflies. "
+                "To manage this disease: \n"
+                "- Remove and destroy infected plants to prevent further spread. \n"
+                "- Use insecticidal soaps or neem oil to control whiteflies. \n"
+                "- Maintain proper plant spacing for good airflow. \n"
+                "- Grow virus-resistant plant varieties if available."
+            )
+
+        elif predicted_class == "fussarium_wilt":
+            additional_info_message = (
+                "Fusarium wilt is a fungal disease that infects the plant's vascular system, causing wilting, yellowing, and eventual plant death. It thrives in warm, moist soil. "
+                "To manage this disease: \n"
+                "- Remove and dispose of infected plants immediately. \n"
+                "- Rotate crops to prevent fungal buildup in the soil. \n"
+                "- Improve soil drainage and avoid overwatering. \n"
+                "- Use resistant plant varieties when possible. \n"
+                "- Sterilize gardening tools to avoid spreading the fungus."
+            )
+
+        elif predicted_class == "Early_Blight":
+            additional_info_message = (
+                "Early blight, caused by Alternaria solani, affects tomato and potato plants, creating brown spots with concentric rings on leaves. It weakens plants and reduces yield. "
+                "To manage this disease: \n"
+                "- Remove affected leaves and avoid overhead watering. \n"
+                "- Use fungicides containing chlorothalonil or copper. \n"
+                "- Rotate crops and avoid planting tomatoes or potatoes in the same soil each year. \n"
+                "- Ensure good spacing between plants for airflow."
+            )
+
+        elif predicted_class == "Late_Blight":
+            additional_info_message = (
+                "Late blight, caused by Phytophthora infestans, is a devastating fungal-like disease that spreads rapidly in cool, humid conditions, causing dark lesions on leaves and fruit. "
+                "To manage this disease: \n"
+                "- Remove infected plants immediately and destroy them. \n"
+                "- Apply fungicides with mancozeb or copper sulfate as a preventive measure. \n"
+                "- Avoid overhead watering and keep leaves dry. \n"
+                "- Choose disease-resistant plant varieties."
+            )
+
+        elif predicted_class == "Brown_Rust":
+            additional_info_message = (
+                "Brown rust (or Leaf Rust) is a fungal disease affecting cereal crops like wheat and barley. It forms small brown pustules on leaves, reducing photosynthesis and yield. "
+                "To manage this disease: \n"
+                "- Use fungicides containing triazoles or strobilurins. \n"
+                "- Remove infected leaves to slow the spread. \n"
+                "- Plant rust-resistant crop varieties. \n"
+                "- Avoid excessive nitrogen fertilization, which makes plants more susceptible."
+            )
+
+        elif predicted_class == "Yellow_Rust":
+            additional_info_message = (
+                "Yellow rust (or Stripe Rust) is a fungal disease that affects wheat and other cereals. It creates yellow streaks along the leaves and reduces grain production. "
+                "To manage this disease: \n"
+                "- Apply fungicides early, especially those with triazole or QoI (strobilurin) ingredients. \n"
+                "- Grow resistant crop varieties when available. \n"
+                "- Practice crop rotation to reduce fungal spores in the soil. \n"
+                "- Ensure good plant nutrition to improve resistance."
+            )
+
+        return PredictionResponseData.generate_response(predicted_class, confidence, additional_info_message, products)
