@@ -44,6 +44,7 @@ class LoginResponseData:
 
 @dataclass
 class ProductData:
+    id = int
     name: str
     price: float
     description: str
@@ -51,7 +52,7 @@ class ProductData:
     category: str
 
     def generate_response(product):
-        return ProductData(name=product.name, price=product.price, description=product.description, image=product.image.url, category=product.category.name)
+        return ProductData(id=product.id,name=product.name, price=product.price, description=product.description, image=product.image.url, category=product.category.name)
 
 
 @dataclass
@@ -64,8 +65,7 @@ class HomeScreenData:
     user_crops: list[UserCropData]
 
     def generate_response(products: product, user_crops):
-        print(user_crops)
-        products = [ProductData(name=product.name, price=product.price, description=product.description, image=product.image.url) for product in products]
+        products = [ProductData.generate_response(product) for product in products]
         user_crops = [UserCropData(crop_name=crop.crop_name) for crop in user_crops] if user_crops else []
         return HomeScreenData(products=products, user_crops=user_crops)
         
